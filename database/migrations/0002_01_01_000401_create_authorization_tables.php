@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreignId('org_team_id')->nullable()->constrained();
             $table->foreignId('job_position_id')->nullable()->constrained();
             $table->foreignId('job_role_id')->nullable()->constrained();
-            $table->foreignId('job_contract_id')->nullable()->constrained();
+            $table->foreignId('agreements')->nullable()->constrained();
             $table->enum('source', ['auto', 'manual'])->default('auto');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->date('start_date')->nullable();
