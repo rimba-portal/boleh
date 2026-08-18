@@ -1,0 +1,32 @@
+[
+  {
+    "name": "access_lobby_panel",
+    "source": "panel",
+    "subject": "lobby"
+  },
+  {
+    "name": "access_staff_panel",
+    "source": "panel",
+    "subject": "staff"
+  },
+  {
+    "name": "access_staff_sensitive_panel",
+    "source": "panel",
+    "subject": "staff-sensitive"
+  },
+  {
+    "name": "access_team_panel",
+    "source": "panel",
+    "subject": "team"
+  },
+  {
+    "name": "access_admin_panel",
+    "source": "panel",
+    "subject": "admin"
+  },
+  {
+    "name": "manage_permissions",
+    "source": "custom",
+    "subject": "boleh"
+  }
+]
