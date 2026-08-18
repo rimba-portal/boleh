@@ -35,7 +35,7 @@ return [
     ],
 
     'panels' => [
-        'priority' => ['admin', 'team', 'staff-sensitive', 'staff', 'lobby'],
+        'priority' => ['admin', 'team', 'staff', 'lobby'],
         'fallback' => 'lobby',
         'permission_pattern' => 'access_%s_panel',
     ],
