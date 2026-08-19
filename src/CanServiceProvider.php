@@ -29,7 +29,7 @@ class CanServiceProvider extends BitesServiceProvider
     protected function registerPackage(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/bites_auth.php', 'bites_auth');
-        $this->app->bind(AttributeResolverContract::class, config('bites_auth.attributes.resolver'));
+        $this->app->bind(AttributeResolverContract::class, config('boleh.attributes.resolver'));
         $this->app->singleton(AuthorizationServiceContract::class, AuthorizationService::class);
         $this->app->singleton(PanelAccessResolverContract::class, PanelAccessService::class);
 
