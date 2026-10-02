@@ -1,6 +1,6 @@
 {
     "name": "rimba/boleh",
-    "description": "Filament authorization design studio for Laravel Permission Manager (RBAC + ABAC).",
+    "description": "Access control layer combining roles, permissions, and policies (RBAC + ABAC).",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -11,10 +11,10 @@
     ],
     "require": {
         "php": "^8.3",
-        "hosseinhezami/laravel-permission-manager": "^2.0",
         "rimba/asas": "^1.3",
         "rimba/siapa": "^1.3",
-        "rimba/sifat": "^1.3"
+        "rimba/sifat": "^1.3",
+        "spatie/laravel-permission": "^7.3"
     },
     "extra": {
         "laravel": {
