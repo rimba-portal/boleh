@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Rimba\Can\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Rimba\Can\Enums\RuleOperator;
 use Spatie\Permission\Models\Permission;
 
+#[Unguarded]
 final class PermissionRule extends Model
 {
-    protected $guarded = [];
-
     protected function casts(): array
     {
         return [
