@@ -6,12 +6,14 @@ namespace Rimba\Can\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Rimba\Can\Enums\AttributeDataType;
 
+#[Table('ab_definitions')]
 #[Appends([
     'code',
 ])]

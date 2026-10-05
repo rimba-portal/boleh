@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('attribute_definitions', function (Blueprint $table): void {
+        Schema::create('ab_definitions', function (Blueprint $table): void {
             $table->id();
             $table->string('table_name', 100);
             $table->string('key', 120);
@@ -67,7 +67,7 @@ return new class extends Migration
         Schema::create('condition_rules', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('condition_group_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('attribute_definition_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('ab_definition_id')->nullable()->constrained()->nullOnDelete();
             $table->string('field');
             $table->string('operator', 30)->default('=');
             $table->json('value')->nullable();
@@ -84,6 +84,6 @@ return new class extends Migration
         Schema::dropIfExists('condition_groups');
         Schema::dropIfExists('role_definition_permissions');
         Schema::dropIfExists('role_definitions');
-        Schema::dropIfExists('attribute_definitions');
+        Schema::dropIfExists('ab_definitions');
     }
 };
