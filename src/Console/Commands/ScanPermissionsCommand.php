@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 
 #[Description('Preview permissions discovered from app and RIMBA packages.')]
-#[Signature('boleh:scan')]
+#[Signature('rimba:lock-scan')]
 final class ScanPermissionsCommand extends BolehCommand
 {
     public function handle(): int

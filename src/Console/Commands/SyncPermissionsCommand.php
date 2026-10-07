@@ -9,13 +9,21 @@ use Illuminate\Console\Attributes\Signature;
 use Rimba\Can\Contracts\PermissionSynchronizer;
 
 #[Description('Synchronize discovered permissions into Spatie permissions.')]
-#[Signature('boleh:sync {--prune : Remove permissions no longer discovered}')]
+#[Signature('rimba:lock-sync {--prune : Remove permissions no longer discovered}')]
 final class SyncPermissionsCommand extends BolehCommand
 {
     public function handle(PermissionSynchronizer $sync): int
     {
         $r = $sync->sync($this->definitions(), (bool) $this->option('prune'));
-        $this->table(['Metric', 'Count'], [['Discovered', $r['total']], ['Created', $r['created']], ['Updated', $r['updated']], ['Deleted', $r['deleted']]]);
+        $this->table(
+            ['Metric', 'Count'],
+            [
+                ['Discovered', $r['total']],
+                ['Created', $r['created']],
+                ['Updated', $r['updated']],
+                ['Deleted', $r['deleted']],
+            ]
+        );
         $this->info('Permission synchronization complete.');
 
         return self::SUCCESS;

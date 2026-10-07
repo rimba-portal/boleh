@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Spatie\Permission\Models\Permission;
 
 #[Description('Check discovered permissions against the database.')]
-#[Signature('boleh:check')]
+#[Signature('rimba:lock-check')]
 final class CheckPermissionsCommand extends BolehCommand
 {
     public function handle(): int
