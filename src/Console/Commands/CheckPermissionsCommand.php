@@ -120,6 +120,7 @@ final class CheckPermissionsCommand extends BolehCommand
     ): array {
         $expected = [
             'type' => $definition->type,
+            'domain' => $definition->domain,
             'package' => $definition->package,
             'resource' => $definition->resource,
             'action' => $definition->action,
@@ -130,9 +131,16 @@ final class CheckPermissionsCommand extends BolehCommand
         $different = [];
 
         foreach ($expected as $field => $value) {
-            $actual = $permission->getAttribute($field);
 
-            if ($this->normalize($actual) !== $this->normalize($value)) {
+            $actual = $permission->getAttribute(
+                $field,
+            );
+
+            if (
+                $this->normalize($actual)
+                !==
+                $this->normalize($value)
+            ) {
                 $different[] = $field;
             }
         }

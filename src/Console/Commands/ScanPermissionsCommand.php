@@ -35,22 +35,29 @@ final class ScanPermissionsCommand extends BolehCommand
         }
 
         if ((bool) $this->option('json')) {
-            $this->line((string) json_encode(
-                array_map(
-                    fn (PermissionDefinition $definition): array => [
-                        'name' => $definition->name,
-                        'guard_name' => $this->guardName(),
-                        'type' => $definition->type,
-                        'package' => $definition->package,
-                        'resource' => $definition->resource,
-                        'action' => $definition->action,
-                        'source_class' => $definition->class,
-                        'description' => $definition->description,
-                    ],
-                    $definitions,
+
+            $this->line(
+                (string) json_encode(
+                    array_map(
+                        fn (
+                            PermissionDefinition $definition,
+                        ): array => [
+                            'name' => $definition->name,
+                            'guard_name' => $this->guardName(),
+                            'type' => $definition->type,
+                            'domain' => $definition->domain,
+                            'package' => $definition->package,
+                            'resource' => $definition->resource,
+                            'action' => $definition->action,
+                            'source_class' => $definition->class,
+                            'description' => $definition->description,
+                        ],
+                        $definitions,
+                    ),
+                    JSON_PRETTY_PRINT
+                        | JSON_UNESCAPED_SLASHES,
                 ),
-                JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES,
-            ));
+            );
 
             return self::SUCCESS;
         }
@@ -60,20 +67,26 @@ final class ScanPermissionsCommand extends BolehCommand
                 'Permission',
                 'Guard',
                 'Type',
+                'Domain',
                 'Package',
                 'Resource',
                 'Action',
-                'Source class',
+                'Source Class',
+                'Description',
             ],
             array_map(
-                fn (PermissionDefinition $definition): array => [
+                fn (
+                    PermissionDefinition $definition,
+                ): array => [
                     $definition->name,
                     $this->guardName(),
                     $definition->type,
+                    $definition->domain ?? '',
                     $this->sourceLabel($definition),
                     $definition->resource ?? '',
                     $definition->action ?? '',
                     $definition->class ?? '',
+                    $definition->description ?? '',
                 ],
                 $definitions,
             ),

@@ -48,6 +48,7 @@ final class PermissionSynchronizerService implements PermissionSynchronizer
 
                 $permission->forceFill([
                     'type' => $definition->type,
+                    'domain' => $definition->domain,
                     'package' => $definition->package,
                     'resource' => $definition->resource,
                     'action' => $definition->action,

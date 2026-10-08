@@ -11,55 +11,189 @@ use ReflectionClass;
 use Rimba\Can\Attributes\Permission;
 use Rimba\Can\Attributes\PermissionResource;
 use Rimba\Can\Data\PermissionDefinition;
+use Rimba\Can\Support\PermissionDescription;
 use Rimba\Can\Support\PermissionName;
 use Rimba\Can\Support\RimbaSourceScanner;
 
 final class PermissionDiscoveryService
 {
-    public function __construct(private readonly RimbaSourceScanner $rimbaSourceScanner) {}
+    public function __construct(
+        private readonly RimbaSourceScanner $rimbaSourceScanner,
+    ) {}
 
+    /**
+     * @return array<int, PermissionDefinition>
+     */
     public function discover(): array
     {
         $found = [];
+
         foreach ($this->rimbaSourceScanner->scan() as $item) {
+
             $class = $item['class'];
+
             if (! class_exists($class) || $this->ignored($class)) {
                 continue;
-            } $r = new ReflectionClass($class);
-            foreach ($r->getAttributes(Permission::class) as $a) {
-                $p = $a->newInstance();
-                $found[] = new PermissionDefinition($p->name, $p->type, $item['package'], class: $class, description: $p->description);
-            } if ($r->isSubclassOf(Resource::class)) {
-                $name = null;
-                $desc = null;
-                foreach ($r->getAttributes(PermissionResource::class) as $a) {
-                    $p = $a->newInstance();
-                    $name = $p->name;
-                    $desc = $p->description;
-                } $name ??= PermissionName::classToResource($class, $item['package']);
-                foreach (config('bites.can.discovery.resource_crud', ['view', 'create', 'edit', 'delete']) as $ability) {
-                    $found[] = new PermissionDefinition(PermissionName::resource($name, $ability), 'resource', $item['package'], $name, $ability, $class, $desc);
-                }
-            } elseif ($r->isSubclassOf(Page::class)) {
-                $page = PermissionName::classToPage($class, $item['package']);
-                $found[] = new PermissionDefinition($page.'.view', 'page', $item['package'], class: $class);
             }
-        } $unique = [];
-        foreach ($found as $d) {
-            $unique[$d->name] = $d;
+
+            $reflection = new ReflectionClass($class);
+
+            /*
+             |--------------------------------------------------------------
+             | Explicit Permissions
+             |--------------------------------------------------------------
+             */
+
+            foreach (
+                $reflection->getAttributes(Permission::class) as $attribute
+            ) {
+                $permission = $attribute->newInstance();
+
+                $found[] = new PermissionDefinition(
+                    name: $permission->name,
+                    type: $permission->type,
+                    domain: PermissionName::namespacePrefix($class),
+                    package: $item['package'],
+                    class: $class,
+                    description: $permission->description,
+                );
+            }
+
+            /*
+             |--------------------------------------------------------------
+             | Filament Resources
+             |--------------------------------------------------------------
+             */
+
+            if ($reflection->isSubclassOf(Resource::class)) {
+
+                $resource = null;
+                $description = null;
+
+                foreach (
+                    $reflection->getAttributes(
+                        PermissionResource::class,
+                    ) as $attribute
+                ) {
+                    $permission = $attribute->newInstance();
+
+                    $resource = $permission->name;
+                    $description = $permission->description;
+                }
+
+                $resource ??= PermissionName::classToResource(
+                    $class,
+                );
+
+                $domain = PermissionName::namespacePrefix(
+                    $class,
+                );
+
+                foreach (
+                    config(
+                        'bites.can.discovery.resource_crud',
+                        [
+                            'viewAny',
+                            'view',
+                            'create',
+                            'update',
+                            'delete',
+                            'restore',
+                            'forceDelete',
+                        ],
+                    ) as $ability
+                ) {
+                    $resourceName = Str::after(
+                        $resource,
+                        '.',
+                    );
+
+                    $found[] = new PermissionDefinition(
+                        name: PermissionName::resource(
+                            $resource,
+                            $ability,
+                        ),
+                        type: 'resource',
+                        domain: $domain,
+                        package: $item['package'],
+                        resource: $resourceName,
+                        action: $ability,
+                        class: $class,
+                        description: $description
+                            ?? PermissionDescription::make(
+                                resource: $resourceName,
+                                ability: $ability,
+                                type: 'resource',
+                            ),
+                    );
+                }
+
+                continue;
+            }
+
+            /*
+             |--------------------------------------------------------------
+             | Filament Pages
+             |--------------------------------------------------------------
+             */
+
+            if ($reflection->isSubclassOf(Page::class)) {
+
+                $page = PermissionName::classToPage(
+                    $class,
+                );
+
+                $pageName = Str::after(
+                    $page,
+                    '.',
+                );
+
+                $found[] = new PermissionDefinition(
+                    name: $page,
+                    type: 'page',
+                    domain: PermissionName::namespacePrefix(
+                        $class,
+                    ),
+                    package: $item['package'],
+                    resource: $pageName,
+                    class: $class,
+                    description: PermissionDescription::make(
+                        resource: $pageName,
+                        ability: null,
+                        type: 'page',
+                    ),
+                );
+            }
         }
 
-return array_values($unique);
+        $unique = [];
+
+        foreach ($found as $permission) {
+            $unique[$permission->name] = $permission;
+        }
+
+        return array_values($unique);
     }
 
-    private function ignored(string $class): bool
-    {
-        foreach (config('bites.can.discovery.ignore_namespaces', []) as $ns) {
-            if (Str::startsWith($class, $ns)) {
+    private function ignored(
+        string $class,
+    ): bool {
+        foreach (
+            config(
+                'bites.can.discovery.ignore_namespaces',
+                [],
+            ) as $namespace
+        ) {
+            if (
+                Str::startsWith(
+                    $class,
+                    $namespace,
+                )
+            ) {
                 return true;
             }
         }
 
-return false;
+        return false;
     }
 }
