@@ -11,7 +11,8 @@ return new class extends Migration
     {
         Schema::table('permissions', function (Blueprint $table): void {
             $table->string('type')->nullable()->after('guard_name');
-            $table->string('package')->nullable()->index()->after('type');
+            $table->string('domain')->nullable()->index()->after('type');
+            $table->string('package')->nullable()->index()->after('domain');
             $table->string('resource')->nullable()->index()->after('package');
             $table->string('action')->nullable()->index()->after('resource');
             $table->text('source_class')->nullable()->after('action');

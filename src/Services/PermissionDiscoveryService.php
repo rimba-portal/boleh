@@ -156,6 +156,7 @@ final class PermissionDiscoveryService
                     ),
                     package: $item['package'],
                     resource: $pageName,
+                    action: 'access',
                     class: $class,
                     description: PermissionDescription::make(
                         resource: $pageName,
