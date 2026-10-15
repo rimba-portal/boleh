@@ -8,9 +8,8 @@ use Illuminate\Support\Str;
 
 final class PermissionName
 {
-    public static function namespacePrefix(
-        string $class,
-    ): string {
+    public static function namespacePrefix(string $class): string
+    {
         $parts = explode('\\', trim($class, '\\'));
 
         return Str::of($parts[1] ?? 'app')
@@ -20,16 +19,18 @@ final class PermissionName
             ->toString();
     }
 
-    public static function resource(
-        string $resource,
-        string $ability,
-    ): string {
+    public static function resource(string $resource, string $ability): string
+    {
         return "{$resource}.{$ability}";
     }
 
-    public static function classToResource(
-        string $class,
-    ): string {
+    public static function page(string $page): string
+    {
+        return "{$page}.access";
+    }
+
+    public static function classToResource(string $class): string
+    {
         $prefix = self::namespacePrefix($class);
 
         $name = preg_replace(
@@ -47,9 +48,8 @@ final class PermissionName
         return "{$prefix}.{$name}";
     }
 
-    public static function classToPage(
-        string $class,
-    ): string {
+    public static function classToPage(string $class): string
+    {
         $prefix = self::namespacePrefix($class);
 
         $name = preg_replace(

@@ -25,13 +25,9 @@ final class PermissionDescription
 
         return match ($type) {
             'resource' => "Can {$verb} {$resource} Resource",
-
             'page' => "Can Access {$resource} Page",
-
             'action' => "Can Execute {$resource} Action",
-
             'panel' => "Can Access {$resource} Panel",
-
             default => "Can {$verb} {$resource}",
         };
     }

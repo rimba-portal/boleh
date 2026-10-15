@@ -10,14 +10,6 @@ return [
         ],
 
         'rimba' => [
-            /*
-             * Your current packages are stored under:
-             *
-             * base_path('rimba')
-             *
-             * Change this to base_path('vendor/rimba') only after the
-             * packages are installed as normal Composer vendor packages.
-             */
             'path' => base_path('rimba'),
         ],
 

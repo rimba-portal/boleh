@@ -12,6 +12,6 @@ final readonly class Permission
     public function __construct(
         public string $name,
         public string $type = 'action',
-        public ?string $description = null
+        public ?string $description = null,
     ) {}
 }
