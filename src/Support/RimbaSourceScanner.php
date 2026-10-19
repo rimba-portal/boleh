@@ -37,7 +37,7 @@ final class RimbaSourceScanner
             }
         }
 
-return $out;
+        return $out;
     }
 
     private function scanDir(string $dir, string $namespace, string $source, ?string $package): array
@@ -53,6 +53,6 @@ return $out;
             $out[] = ['class' => trim($namespace, '\\').'\\'.$rel, 'path' => $file->getPathname(), 'source' => $source, 'package' => $package];
         }
 
-return $out;
+        return $out;
     }
 }
