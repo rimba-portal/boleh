@@ -32,5 +32,34 @@ return [
         'sync' => [
             'guard' => 'web',
         ],
+
+        'rbac' => [
+            'org_unit_roles' => [
+                'owner',
+                'member',
+            ],
+
+            'org_team_roles' => [
+                'captain',
+                'scout',
+                'player',
+                'quartermaster',
+                'tactician',
+                'coach',
+            ],
+
+            'global_roles' => [
+                // Exceptional non-package global roles may be added here later.
+            ],
+
+            'package_managers' => [
+                'dms',
+                'lms',
+                'wfm',
+                'work',
+                'time',
+                'floorplan',
+            ],
+        ],
     ],
 ];
