@@ -30,8 +30,8 @@ Both naming conventions use specific UTF-8 geometric diamond symbols to ensure s
 * **Symbol:** Black Diamond `◆` (U+25C6)
 * **Format Structure:** `job_roles◆<tablename>◆<value>`
 * **Examples:**
-  * `job_roles◆<org_units.nick>◆head` (e.g., `job_roles◆FINANCE◆head`)
-  * `job_roles◆<org_teams.nick>◆handler` (e.g., `job_roles◆SUPPORT_A◆handler`)
+  * `unit_roles◆<org_units.nick>◆head` (e.g., `unit_roles◆FINANCE◆head`)
+  * `team_roles◆<org_teams.nick>◆handler` (e.g., `team_roles◆SUPPORT_A◆handler`)
   * `job_roles◆global◆PRODUCTION_OPERATOR`
 
 ---
