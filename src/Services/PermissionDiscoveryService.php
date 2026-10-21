@@ -95,6 +95,8 @@ final class PermissionDiscoveryService
         ?string $package,
         array &$found,
     ): void {
+        $panel = $this->panelFromClass($class);
+
         foreach ($reflection->getAttributes(Permission::class) as $attribute) {
             $permission = $attribute->newInstance();
 
@@ -103,6 +105,7 @@ final class PermissionDiscoveryService
                 type: $permission->type,
                 domain: PermissionName::namespacePrefix($class),
                 package: $package,
+                panel: $panel,
                 class: $class,
                 description: $permission->description,
             );
@@ -123,6 +126,7 @@ final class PermissionDiscoveryService
 
         foreach ($reflection->getAttributes(PermissionResource::class) as $attribute) {
             $permission = $attribute->newInstance();
+
             $resource = $permission->name;
             $description = $permission->description;
         }
@@ -130,21 +134,26 @@ final class PermissionDiscoveryService
         $resource ??= PermissionName::classToResource($class);
 
         $domain = PermissionName::namespacePrefix($class);
-        $resourceName = Str::after($resource, '.');
+        $panel = $this->panelFromClass($class);
 
-        foreach ($this->resourceAbilities() as $ability) {
+        foreach ($this->resourceAbilities() as $action) {
             $found[] = new PermissionDefinition(
-                name: PermissionName::resource($resource, $ability),
+                name: PermissionName::resource(
+                    domain: $domain,
+                    resource: $resource,
+                    action: $action,
+                ),
                 type: 'resource',
                 domain: $domain,
                 package: $package,
-                resource: $resourceName,
-                action: $ability,
+                panel: $panel,
+                resource: $resource,
+                action: $action,
                 class: $class,
                 description: $description
                     ?? PermissionDescription::make(
-                        resource: $resourceName,
-                        ability: $ability,
+                        resource: $resource,
+                        ability: $action,
                         type: 'resource',
                     ),
             );
@@ -159,20 +168,28 @@ final class PermissionDiscoveryService
         ?string $package,
         array &$found,
     ): void {
-        $page = PermissionName::classToPage($class);
-        $pageName = Str::after($page, '.');
+        $domain = PermissionName::namespacePrefix($class);
+        $resource = PermissionName::classToPage($class);
+        $panel = $this->panelFromClass($class);
+
+        $action = in_array($panel, ['admin', 'team'], true) ? 'manage' : 'access';
 
         $found[] = new PermissionDefinition(
-            name: PermissionName::page($page),
+            name: PermissionName::page(
+                domain: $domain,
+                resource: $resource,
+                action: $action,
+            ),
             type: 'page',
-            domain: PermissionName::namespacePrefix($class),
+            domain: $domain,
             package: $package,
-            resource: $pageName,
-            action: 'access',
+            panel: $panel,
+            resource: $resource,
+            action: $action,
             class: $class,
             description: PermissionDescription::make(
-                resource: $pageName,
-                ability: 'access',
+                resource: $resource,
+                ability: $action,
                 type: 'page',
             ),
         );
@@ -211,5 +228,16 @@ final class PermissionDiscoveryService
         }
 
         return false;
+    }
+
+    private function panelFromClass(string $class): ?string
+    {
+        return match (true) {
+            str_contains($class, '\\Admin\\') => 'admin',
+            str_contains($class, '\\Staff\\') => 'staff',
+            str_contains($class, '\\Team\\') => 'team',
+            str_contains($class, '\\Lobby\\') => 'lobby',
+            default => null,
+        };
     }
 }

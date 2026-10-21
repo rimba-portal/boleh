@@ -10,7 +10,7 @@ return [
         ],
 
         'rimba' => [
-            'path' => base_path('rimba'),
+            'path' => base_path('vendor/rimba'),
         ],
 
         'discovery' => [

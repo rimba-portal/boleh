@@ -50,6 +50,7 @@ final class PermissionSynchronizerService implements PermissionSynchronizer
                     'type' => $definition->type,
                     'domain' => $definition->domain,
                     'package' => $definition->package,
+                    'panel' => $definition->panel,
                     'resource' => $definition->resource,
                     'action' => $definition->action,
                     'source_class' => $definition->class,

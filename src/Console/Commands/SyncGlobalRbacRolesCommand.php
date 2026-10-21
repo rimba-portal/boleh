@@ -7,51 +7,39 @@ namespace Rimba\Can\Console\Commands;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use Rimba\Can\Services\RbacRoleSynchronizer;
-use Rimba\Can\Support\RbacRoleName;
+use Rimba\Can\Services\GlobalRbacRoleBuilder;
 
-#[Description('Synchronize global Rimba RBAC roles.')]
-#[Signature('rimba:rbac-sync-global')]
+#[Description('Synchronize global RBAC roles from permission metadata')]
+#[Signature('rimba:sync-global-rbac-roles
+        {--guard=web : Permission guard}')]
 final class SyncGlobalRbacRolesCommand extends Command
 {
-    public function handle(RbacRoleSynchronizer $roles): int
-    {
-        $packageRoles = collect(
-            config('bites.can.rbac.package_managers', []),
-        )->map(
-            static fn (string $package): string => strtolower(trim($package)).'_manager',
+    public function handle(
+        GlobalRbacRoleBuilder $builder,
+    ): int {
+        $result = $builder->sync(
+            guard: (string) $this->option('guard'),
         );
 
-        $globalRoles = collect(
-            config('bites.can.rbac.global_roles', []),
-        );
-
-        $responsibilities = $packageRoles
-            ->merge($globalRoles)
-            ->filter(static fn (mixed $role): bool => is_string($role) && trim($role) !== ''
-            )
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
-
-        $synced = $roles->syncScope(
-            namespace: RbacRoleName::JOB,
-            scope: RbacRoleName::GLOBAL,
-            responsibilities: $responsibilities,
+        $this->components->info(
+            'Global RBAC roles synchronized.',
         );
 
         $this->table(
-            ['Role'],
-            $synced
-                ->map(static fn ($role): array => [$role->name])
-                ->all(),
+            ['Result', 'Count'],
+            [
+                ['Created', $result['created']],
+                ['Updated', $result['updated']],
+                [
+                    'Roles',
+                    count($result['roles']),
+                ],
+            ],
         );
 
-        $this->components->info(sprintf(
-            'Synchronized %d global RBAC role(s).',
-            $synced->count(),
-        ));
+        foreach ($result['roles'] as $role) {
+            $this->line($role);
+        }
 
         return self::SUCCESS;
     }

@@ -11,6 +11,7 @@ final readonly class PermissionDefinition
         public string $type,
         public ?string $domain = null,
         public ?string $package = null,
+        public ?string $panel = null,
         public ?string $resource = null,
         public ?string $action = null,
         public ?string $class = null,

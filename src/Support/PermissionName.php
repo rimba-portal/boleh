@@ -19,51 +19,46 @@ final class PermissionName
             ->toString();
     }
 
-    public static function resource(string $resource, string $ability): string
-    {
-        return "{$resource}.{$ability}";
+    public static function resource(
+        string $domain,
+        string $resource,
+        string $action,
+    ): string {
+        return "{$action}.{$domain}.{$resource}";
     }
 
-    public static function page(string $page): string
-    {
-        return "{$page}.access";
+    public static function page(
+        string $domain,
+        string $resource,
+        string $action,
+    ): string {
+        return "{$action}.{$domain}.{$resource}";
     }
 
     public static function classToResource(string $class): string
     {
-        $prefix = self::namespacePrefix($class);
-
-        $name = preg_replace(
-            '/Resource$/',
-            '',
-            class_basename($class),
-        );
-
-        $name = Str::of($name)
-            ->snake()
-            ->replace('_', '-')
-            ->lower()
-            ->toString();
-
-        return "{$prefix}.{$name}";
+        return self::className($class, 'Resource');
     }
 
     public static function classToPage(string $class): string
     {
-        $prefix = self::namespacePrefix($class);
+        return self::className($class, 'Page');
+    }
 
+    private static function className(
+        string $class,
+        string $suffix,
+    ): string {
         $name = preg_replace(
-            '/Page$/',
+            '/'.preg_quote($suffix, '/').'$/',
             '',
             class_basename($class),
         );
 
-        $name = Str::of($name)
+        return Str::of($name)
             ->snake()
             ->replace('_', '-')
             ->lower()
             ->toString();
-
-        return "{$prefix}.{$name}";
     }
 }
