@@ -37,9 +37,9 @@ final class SyncGlobalRbacRolesCommand extends Command
             ],
         );
 
-        foreach ($result['roles'] as $role) {
-            $this->line($role);
-        }
+        // foreach ($result['roles'] as $role) {
+        //     $this->line($role);
+        // }
 
         return self::SUCCESS;
     }
