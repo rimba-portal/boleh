@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Rimba\Can\Services;
 
 use Illuminate\Support\Collection;
-use RuntimeException;
+use Illuminate\Support\Facades\DB;
+use Rimba\Can\Support\RbacRoleName;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 final class GlobalRbacRoleBuilder
 {
@@ -71,44 +73,55 @@ final class GlobalRbacRoleBuilder
     {
         $permissions = Permission::query()
             ->where('guard_name', $guard)
+            ->whereNotNull('domain')
             ->whereNotNull('resource')
             ->get();
-
-        $this->assertUniqueResources($permissions);
 
         $result = [
             'created' => 0,
             'updated' => 0,
+            'deleted' => 0,
             'roles' => [],
         ];
 
-        $permissions
-            ->groupBy('resource')
-            ->each(function (Collection $permissions) use (
-                $guard,
-                &$result,
-            ): void {
-                $pages = $permissions->where('type', 'page');
+        DB::transaction(function () use (
+            $permissions,
+            $guard,
+            &$result,
+        ): void {
+            $permissions
+                ->groupBy(
+                    fn (Permission $permission): string => $this->groupKey(
+                        domain: (string) $permission->domain,
+                        resource: (string) $permission->resource,
+                    ),
+                )
+                ->each(function (Collection $group) use (
+                    $guard,
+                    &$result,
+                ): void {
+                    $this->syncPageRoles(
+                        permissions: $group->where('type', 'page'),
+                        guard: $guard,
+                        result: $result,
+                    );
 
-                $resources = $permissions->where(
-                    'type',
-                    'resource',
-                );
+                    $this->syncResourceRoles(
+                        permissions: $group->where('type', 'resource'),
+                        guard: $guard,
+                        result: $result,
+                    );
+                });
 
-                $this->syncPageRoles(
-                    permissions: $pages,
-                    guard: $guard,
-                    result: $result,
-                );
-
-                $this->syncResourceRoles(
-                    permissions: $resources,
-                    guard: $guard,
-                    result: $result,
-                );
-            });
+            $result['deleted'] = $this->pruneManagedRoles(
+                expectedNames: $result['roles'],
+                guard: $guard,
+            );
+        });
 
         sort($result['roles']);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return $result;
     }
@@ -130,7 +143,8 @@ final class GlobalRbacRoleBuilder
             }
 
             $this->syncRole(
-                resource: $permission->resource,
+                domain: (string) $permission->domain,
+                resource: (string) $permission->resource,
                 level: $level,
                 permissions: collect([$permission]),
                 guard: $guard,
@@ -148,10 +162,11 @@ final class GlobalRbacRoleBuilder
             return;
         }
 
-        $panel = $permissions->first()->panel;
+        /** @var Permission $first */
+        $first = $permissions->first();
 
         $levels = in_array(
-            $panel,
+            $first->panel,
             self::MANAGED_PANELS,
             true,
         )
@@ -168,7 +183,8 @@ final class GlobalRbacRoleBuilder
             }
 
             $this->syncRole(
-                resource: $permissions->first()->resource,
+                domain: (string) $first->domain,
+                resource: (string) $first->resource,
                 level: $level,
                 permissions: $selected,
                 guard: $guard,
@@ -178,6 +194,7 @@ final class GlobalRbacRoleBuilder
     }
 
     private function syncRole(
+        string $domain,
         string $resource,
         string $level,
         Collection $permissions,
@@ -185,6 +202,7 @@ final class GlobalRbacRoleBuilder
         array &$result,
     ): void {
         $name = $this->roleName(
+            domain: $domain,
             resource: $resource,
             level: $level,
         );
@@ -196,7 +214,12 @@ final class GlobalRbacRoleBuilder
 
         $created = $role->wasRecentlyCreated;
 
-        $role->syncPermissions($permissions);
+        $role->syncPermissions(
+            $permissions
+                ->pluck('name')
+                ->values()
+                ->all(),
+        );
 
         if ($created) {
             $result['created']++;
@@ -208,43 +231,54 @@ final class GlobalRbacRoleBuilder
     }
 
     private function roleName(
+        string $domain,
         string $resource,
         string $level,
     ): string {
-        return sprintf(
-            'job_roles◆global◆%s_%s',
-            $resource,
-            $level,
+        return RbacRoleName::globalJob(
+            implode('_', [
+                $domain,
+                $resource,
+                $level,
+            ]),
         );
     }
 
-    private function assertUniqueResources(
-        Collection $permissions,
-    ): void {
-        $duplicates = $permissions
-            ->filter(
-                fn (Permission $permission): bool => filled($permission->domain),
-            )
-            ->groupBy('resource')
-            ->filter(
-                fn (Collection $group): bool => $group
-                    ->pluck('domain')
-                    ->filter()
-                    ->unique()
-                    ->count() > 1,
-            );
+    private function groupKey(
+        string $domain,
+        string $resource,
+    ): string {
+        return $domain.'::'.$resource;
+    }
 
-        if ($duplicates->isEmpty()) {
-            return;
+    /**
+     * Remove obsolete generated global roles.
+     *
+     * Package-manager roles are excluded because they end in "_manager"
+     * and are not owned by this builder.
+     *
+     * @param  array<int, string>  $expectedNames
+     */
+    private function pruneManagedRoles(
+        array $expectedNames,
+        string $guard,
+    ): int {
+        $prefix = RbacRoleName::JOB
+            .RbacRoleName::DELIMITER
+            .RbacRoleName::GLOBAL
+            .RbacRoleName::DELIMITER;
+
+        $builder = Role::query()
+            ->where('guard_name', $guard)
+            ->where('name', 'like', $prefix.'%')
+            ->where('name', 'not like', $prefix.'%_manager');
+
+        if ($expectedNames === []) {
+            return 0;
         }
 
-        $resources = $duplicates
-            ->keys()
-            ->sort()
-            ->implode(', ');
-
-        throw new RuntimeException(
-            "Global RBAC resource collision: {$resources}",
-        );
+        return $builder
+            ->whereNotIn('name', array_values(array_unique($expectedNames)))
+            ->delete();
     }
 }

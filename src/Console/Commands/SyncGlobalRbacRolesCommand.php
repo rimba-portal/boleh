@@ -11,7 +11,8 @@ use Rimba\Can\Services\GlobalRbacRoleBuilder;
 
 #[Description('Synchronize global RBAC roles from permission metadata')]
 #[Signature('rimba:sync-global-rbac-roles
-        {--guard=web : Permission guard}')]
+    {--guard=web : Permission guard}
+')]
 final class SyncGlobalRbacRolesCommand extends Command
 {
     public function handle(
@@ -30,16 +31,10 @@ final class SyncGlobalRbacRolesCommand extends Command
             [
                 ['Created', $result['created']],
                 ['Updated', $result['updated']],
-                [
-                    'Roles',
-                    count($result['roles']),
-                ],
+                ['Deleted', $result['deleted']],
+                ['Roles', count($result['roles'])],
             ],
         );
-
-        // foreach ($result['roles'] as $role) {
-        //     $this->line($role);
-        // }
 
         return self::SUCCESS;
     }
